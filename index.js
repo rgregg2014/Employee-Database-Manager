@@ -266,6 +266,8 @@ async function removeEmployee() {
   prompt();
 }
 
+//Convenience function, I ask this a few times and wanted to make the functions look cleaner
+
 function askId() {
   return [
     {
@@ -276,7 +278,7 @@ function askId() {
   ];
 }
 
-// This function is giving me an uncaught promise error
+// I stared at this function for a sold 45 minutes when I realized I had a single misplaced comma. Thaaaaaat's coding!
 
 async function updateRole() {
   const employeeId = await inquirer.prompt(askId());
@@ -313,6 +315,8 @@ async function updateRole() {
     }
   );
 }
+
+// Convenience function, I ask this a few times and wanted to make functions look cleaner
 
 function askName() {
   return [

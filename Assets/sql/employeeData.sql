@@ -1,3 +1,5 @@
+--File included as a reference for the input into the database
+
 DROP DATABASE IF EXISTS employees;
 CREATE DATABASE employees;
 USE employees;
