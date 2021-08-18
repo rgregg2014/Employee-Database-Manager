@@ -1,3 +1,5 @@
+//NOTE: I commented the manager stuff out after making the video. The option has been removed from this version of the project.
+
 // DEPENDENCIES =========================================================================================================================
 
 const mysql = require("mysql");
@@ -5,17 +7,17 @@ const inquirer = require("inquirer");
 require("console.table");
 
 // GLOBAL DATA ==========================================================================================================================
-//-------(Mostly, I wanted to try using a destructured object in a prompt. If there's ever a time I need to use the same answers multiple times across several questions.)
+//-------(I wanted to try using a destructured object in a prompt. If there's ever a time I need to use the same answers multiple times across several questions. It also made the switch cases cleaner and easier to understand. Plus, it allowed flexibility within prompts further down the page.)
 
-const promptMessages = {
-  viewAllEmployees: "View All Employees",
+const promptChoices = {
+  allEmployees: "View All Employees",
   viewByDepartment: "View All Employees by Department",
   viewByManager: "View All Employees by Manager",
   addEmployee: "Add an Employee",
   removeEmployee: "Remove an Employee",
   updateRole: "Update Employee Role",
   updateEmployeeManager: "Update an Employee's Manager",
-  viewAllRoles: "View All Roles",
+  allRoles: "View All Roles",
   exit: "Exit",
 };
 
@@ -25,7 +27,7 @@ const connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
   user: "root",
-  password: "YOUR PASSWORD HERE",
+  password: "sisyphus",
   database: "employees",
 });
 
@@ -46,41 +48,41 @@ function prompt() {
       type: "list",
       message: "What would you like to do?",
       choices: [
-        promptMessages.viewAllEmployees,
-        promptMessages.viewByDepartment,
-        promptMessages.viewByManager,
-        promptMessages.viewAllRoles,
-        promptMessages.addEmployee,
-        promptMessages.removeEmployee,
-        promptMessages.updateRole,
-        promptMessages.exit,
+        promptChoices.allEmployees,
+        promptChoices.viewByDepartment,
+        //promptChoices.viewByManager,
+        promptChoices.allRoles,
+        promptChoices.addEmployee,
+        promptChoices.removeEmployee,
+        promptChoices.updateRole,
+        promptChoices.exit,
       ],
     })
     .then((answer) => {
       console.log("answer", answer);
       switch (answer.action) {
-        case promptMessages.viewAllEmployees:
-          viewAllEmployees();
+        case promptChoices.allEmployees:
+          viewEmployeeData();
           break;
-        case promptMessages.viewByDepartment:
-          viewByDepartment();
+        case promptChoices.viewByDepartment:
+          viewDepartmentData();
           break;
-        case promptMessages.viewByManager:
+        /*case promptChoices.viewByManager:
           viewByManager();
-          break;
-        case promptMessages.addEmployee:
+          break;*/
+        case promptChoices.addEmployee:
           addEmployee();
           break;
-        case promptMessages.removeEmployee:
-          removeData("delete");
+        case promptChoices.removeEmployee:
+          alterData("delete");
           break;
-        case promptMessages.updateRole:
-          removeData("role");
+        case promptChoices.updateRole:
+          alterData("role");
           break;
-        case promptMessages.viewAllRoles:
-          viewAllRoles();
+        case promptChoices.allRoles:
+          viewRoleData();
           break;
-        case promptMessages.exit:
+        case promptChoices.exit:
           connection.end();
           break;
       }
@@ -89,7 +91,7 @@ function prompt() {
 
 // SECONDARY FUNCTIONS, CALLED WHEN CASES ARE MET IN INITIALIZING FUNCTION ===============================================================
 
-function viewAllEmployees() {
+function viewEmployeeData() {
   const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager
   FROM employee
   LEFT JOIN employee manager on manager.id = employee.manager_id
@@ -106,7 +108,7 @@ function viewAllEmployees() {
   });
 }
 
-function viewByDepartment() {
+function viewDepartmentData() {
   const query = `SELECT department.name AS department, role.title, employee.id, employee.first_name, employee.last_name
     FROM employee
     LEFT JOIN role ON (role.id = employee.role_id)
@@ -122,7 +124,8 @@ function viewByDepartment() {
   });
 }
 
-function viewByManager() {
+// This is returning an empty table, still working out why.
+/*function viewByManager() {
   const query = `SELECT CONCAT(manager.first_name, ' ', manager.last_name) AS manager, department.name AS department, employee.id, employee.first_name, employee.last_name, role.title
     FROM employee
     LEFT JOIN employee manager ON manager.id = employee.manager_id
@@ -137,9 +140,9 @@ function viewByManager() {
     console.table(res);
     prompt();
   });
-}
+}*/
 
-function viewAllRoles() {
+function viewRoleData() {
   const query = `SELECT role.title, employee.id, employee.first_name, employee.last_name, department.name AS department
     FROM employee
     LEFT JOIN role ON (role.id = employee.role_id)
@@ -223,7 +226,7 @@ async function addEmployee() {
   );
 }
 
-function removeData(input) {
+function alterData(input) {
   const promptQuest = {
     yes: "yes",
     no: "no (view employee list)",
@@ -241,7 +244,7 @@ function removeData(input) {
     .then((answer) => {
       if (input === "delete" && answer.action === "yes") removeEmployee();
       else if (input === "role" && answer.action === "yes") updateRole();
-      else viewAllEmployees();
+      else viewEmployeeData();
     });
 }
 
@@ -262,23 +265,11 @@ async function removeEmployee() {
       if (err) throw err;
     }
   );
-  console.log("Employee has been removed from the system");
+  console.log(
+    "Employee has been removed from the system. Please verify your records."
+  );
   prompt();
 }
-
-//Convenience function, I ask this a few times and wanted to make the functions look cleaner
-
-function askId() {
-  return [
-    {
-      name: "name",
-      type: "input",
-      message: "What is the employee's ID?",
-    },
-  ];
-}
-
-// I stared at this function for a sold 45 minutes when I realized I had a single misplaced comma. Thaaaaaat's coding!
 
 async function updateRole() {
   const employeeId = await inquirer.prompt(askId());
@@ -308,7 +299,7 @@ async function updateRole() {
           WHERE employee.id = ${employeeId.name}`,
         async (err, res) => {
           if (err) throw err;
-          console.log("Role has been updated. Please verify in database.");
+          console.log("Role has been updated. Please verify your records.");
           prompt();
         }
       );
@@ -316,7 +307,17 @@ async function updateRole() {
   );
 }
 
-// Convenience function, I ask this a few times and wanted to make functions look cleaner
+//Convenience functions, I ask these a few times and wanted to make the bigger functions look cleaner
+
+function askId() {
+  return [
+    {
+      name: "name",
+      type: "input",
+      message: "What is the employee's ID?",
+    },
+  ];
+}
 
 function askName() {
   return [
