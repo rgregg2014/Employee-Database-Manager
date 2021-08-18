@@ -126,7 +126,7 @@ function viewByManager() {
   const query = `SELECT CONCAT(manager.first_name, ' ', manager.last_name) AS manager, department.name AS department, employee.id, employee.first_name, employee.last_name, role.title
     FROM employee
     LEFT JOIN employee manager ON manager.id = employee.manager_id
-    INNER JOIN role ON (role.id = employee.role_id && employee.manager_id != 'NULL)
+    INNER JOIN role ON (role.id = employee.role_id && employee.manager_id != NULL)
     INNER JOIN department ON (department.id = role.department_id)
     ORDER BY manager;`;
   connection.query(query, (err, res) => {
